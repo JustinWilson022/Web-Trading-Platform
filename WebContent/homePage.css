@@ -1,0 +1,45 @@
+@charset "UTF-8";
+
+body{
+	font-family: Arial, sans-serif;
+}
+
+.topnav {
+	background-color: MediumBlue;
+	overflow: hidden
+}
+
+.topnav a {
+	color: #f2f2f2;
+  	text-align: center;
+  	padding: 14px 16px;
+  	text-decoration: none;
+  	font-size: 17px;
+}
+
+.topnav a.home {
+	float: left; 
+}
+
+.topnav a.buttons {
+	float: right; 
+}
+
+h2 {
+	text-align: center; 
+	font-size: 275%;
+}
+
+input[name = "ticker"]{
+	width: 20%; 
+	border-radius: 10px; 
+}
+
+.middle{
+	margin-top: 150px; 
+}
+
+.red{
+	color: red; 
+}
+

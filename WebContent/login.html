@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>SalStocks Login</title>
+	<link rel = "stylesheet" href = login.css>
+	<meta name="google-signin-client_id" content="881355747837-8red4ufsj1i24dp25l1he7mjpq8cge3o.apps.googleusercontent.com">
+	<script src="https://apis.google.com/js/platform.js" async defer></script>
+	<script type="text/javascript">
+		function registerUser(){
+			var email = document.getElementById('email_').value; 
+			var username = document.getElementById('user').value; 
+			var password = document.getElementById('pass').value; 
+			var confirm = document.getElementById('confirm').value;
+			if(email == "" || username == "" || password == "" || confirm == ""){
+				alert("Please fill out all fields"); 
+			}
+			else{
+				fetch('SignUpServlet?email=' + email + '&username=' + username + '&password=' + password + '&confirm=' + confirm)
+				.then(response => response.text())
+				.then(data => {
+					if(data != ""){
+						console.log("here");
+						alert(data); 
+					}
+					else{
+						location.replace("homePage.html");
+					}
+				})
+			}
+			
+		};
+		function checkLogin(){
+			var username = document.getElementById('username_').value; 
+			var password = document.getElementById('password_').value; 
+			fetch('LoginServlet?username=' + username + '&password=' + password)
+			.then(response => response.text())
+			.then(data => {
+				if(data != ""){
+					alert(data); 
+				}
+				else{
+					location.replace("homePage.html");
+				}
+			})
+		};
+		function onSignIn(googleUser) {
+			  var profile = googleUser.getBasicProfile();
+			  console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+			  console.log('Name: ' + profile.getName());
+			  console.log('Image URL: ' + profile.getImageUrl());
+			  console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+			  var cookies = document.cookie.split(";");
+			  var username = cookies[0].split("=");
+			  fetch('GoogleServlet?username=' + username[1])
+				.then(response => response.text())
+				.then(data => {
+					console.log(data);
+					location.replace("homePage.html");
+				})
+		};
+		/*window.onbeforeunload = function(e){
+			 gapi.auth2.getAuthInstance().signOut();
+		};*/
+		function logout(){
+			gapi.auth2.getAuthInstance().signOut();
+		};
+	</script>
+</head>
+<body onload = logout()>
+	<div class = "topnav">
+		<a class = "home" href = "homePage.html">SalStocks</a>
+		<a style = 'float: right' href = 'login.html'>Login/Sign Up</a>
+		<a style = 'float: right' href = 'homePage.html'>Home/Search</a>
+	</div>
+	<div style = "width: 50%; margin:auto; margin-top: 5%">
+	<div style = "float: left">
+		<h2>Login</h2>
+		
+			<label for = "username_">Username</label><br>
+			<input id = "username_" type = "text" name = "username" required><br>
+			<br>
+			<label for = "password_">Password</label><br>
+			<input id = "password_" type = "text" name = "password" required><br> 
+			<br>
+			<button onclick = checkLogin() class = "submit" type="submit">Sign In</button><br>
+			<br>
+			<div class="g-signin2" data-onsuccess="onSignIn"></div>
+		
+	</div>
+	<div style = "float: right">
+		<h2>Sign Up</h2>
+			<label for = "email_">Email</label><br>
+			<input id = "email_" type = "email" name = "email" required><br>
+			<br>
+			<label for = "user">Username</label><br>
+			<input id = "user" type = "text" name = "username" required><br>
+			<br>
+			<label for = "pass">Password</label><br>
+			<input id = "pass" type = "text" name = "password" required><br>
+			<br>
+			<label for = "confirm">Confirm Password</label><br>
+			<input id = "confirm" type = "text" name = "confirmPassword" required><br>
+			<br>
+			<input onclick = registerUser() class = "submit" type="submit" value="Create Account">
+	</div>
+	</div>
+</body>
+</html>

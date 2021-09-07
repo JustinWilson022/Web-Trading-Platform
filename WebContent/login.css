@@ -1,0 +1,38 @@
+@charset "UTF-8";
+
+body{
+	font-family: Arial, sans-serif;
+}
+
+.topnav {
+	background-color: MediumBlue;
+	overflow: hidden
+}
+
+.topnav a {
+	color: #f2f2f2;
+  	text-align: center;
+  	padding: 14px 16px;
+  	text-decoration: none;
+  	font-size: 17px;
+}
+
+.topnav a.home {
+	float: left; 
+}
+
+input{
+	width: 180%; 
+	height: 20px;
+}
+
+label{
+	color: grey; 
+}
+
+.submit{
+	width:185%; 
+	height: 25px;
+	background-color:firebrick;
+	color: white;
+}

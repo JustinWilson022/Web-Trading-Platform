@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>SalStocks Home</title>
+	<link rel = "stylesheet" href = homePage.css>
+	<script src="https://kit.fontawesome.com/38c9aaa88e.js" crossorigin="anonymous"></script>
+	<meta name="google-signin-client_id" content="881355747837-8red4ufsj1i24dp25l1he7mjpq8cge3o.apps.googleusercontent.com">
+	<script src="https://apis.google.com/js/platform.js?onload=onLoad" async defer></script>
+	<script>
+		var getTicker = null; 
+		function loggedIn(){
+			var x = document.cookie.split(";"); 
+			var info = null; 
+			console.log("hello");
+			console.log(x);
+			console.log(x.length); 
+			if(x.length <= 1){
+				console.log("false")
+				var login = "<a style = 'float: right' href = 'login.html'>Login/Sign Up</a>";
+				var home = "<a style = 'float: right' href = 'homePage.html'>Home/Search</a>";
+				document.getElementById('navbar').innerHTML = login + home;
+			}
+			else{
+				var logout = "<a onclick = 'clickLogout()' style = 'float: right' href = '#Logout'>Logout</a>";
+				var portfolio = "<a onclick = 'clickPortfolio()' style = 'float: right' href = '#Portfolio'>Portfolio</a>";
+				var favorites = "<a onclick = 'clickFavorites()' style = 'float: right' href = '#Favorites'>Favorites</a>";
+				var home = "<a style = 'float: right' href = 'homePage.html'>Home/Search</a>";
+				document.getElementById('navbar').innerHTML = logout + portfolio + favorites + home; 
+			}
+			
+		};
+		async function companyData(){
+			var element = document.getElementById('searchSpace').value; 
+			fetch('SearchServlet?ticker=' + element)
+			.then(response => response.json())
+			.then(data => {
+				if(data.length == 0){
+					alert("Please enter a valid ticker");
+				}
+				else{
+				console.log(data); 
+				info = data; 
+				var x = document.cookie.split(";"); 
+				if(x.length <= 1){
+					var ticker = '<h1>'+data[1].ticker+'</h1>'; 
+					var name = "<h1 style = 'color: grey'>"+data[1].name+"<h1>"; 
+					var exchange = "<p style = 'font-size: 16px; color: grey'>"+data[1].exchangeCode+"</p>";
+					var summary = "<p style = 'font-size: 16px; color: grey'>Summary:</p>";  
+					var line = "<hr style = 'border-top: 3px solid; color: MediumBlue'>"; 
+					var priceList = "<ul style = 'list-style-type:none; font-size: 16px; color: grey; margin-left: -30px'><li>High Price: "+data[0].high+"</li>"
+					+ "<li>Low Price: "+data[0].low+"</li><li>Open Price: "+data[0].open+"</li>" +
+					"<li>Close: " +data[0].close+"</li><li>Volume: " +data[0].volume+"</li></ul>";
+					var descriptionHead = "<h3>Company's Description:</h3>"; 
+					document.getElementById('content').innerHTML = ticker + name + exchange + summary + 
+					line + priceList + descriptionHead;
+					var startDate = "<p style = 'font-size: 16px; color: grey'>Start Date: "+data[1].startDate+"</p>"; 
+					var description = "<p style = 'font-size: 16px; color: grey'>"+data[1].description+"</p>"; 
+					document.getElementById('description').innerHTML = startDate + description; 
+				}
+				else{
+					var secondDiv = "<div style = 'float:right; text-align: right; margin-right: 10%'>";
+					var last;
+					var change = data[2].last - data[2].prevClose; 
+					change = change.toFixed(2);
+					var changeLine
+					if(change >= 0){
+						changeLine = "<h1 style = 'color: limegreen; margin-top: 0%'>"+change+"("+((change*100)/data[2].prevClose).toFixed(2)+")%</h1>";
+						last = "<h2 style ='color:limegreen; text-align:right'>"+data[2].last+"</h2>";
+					}
+					else{
+						changeLine = "<h1 style = 'color: red; margin-top: 0%'>"+change+"("+((change*100)/data[2].prevClose).toFixed(2)+")%</h1>";
+						last = "<h2 style ='color:red; text-align:right'>"+data[2].last+"</h2>";
+					}
+					var d = new Date();
+					var date = "<p style = 'color: grey'>"+d+"</p>";
+					var endSecondDiv = "</div"; 
+					
+					var firstDiv = "<div style = 'float:left; text-align:left; margin-left:10%'>";
+					var ticker = "<h2 name = 'ticker' style = 'text-align:left'>"+data[1].ticker+"</h2>"; 
+					getTicker = data[1].ticker; 
+					var name = "<h1 style = 'color: grey'>"+data[1].name+"<h1>"; 
+					var star = "<span id = 'star'><i onclick = 'clickStar()' class='far fa-star'></i></span>";
+					var exchange = "<p style = 'font-size: 16px; color: grey;'>"+data[1].exchangeCode+"</p>";
+					var label = "<label for='quantity' style = 'font-size: 16px'>Quantity: </label>"
+					var quantity = "<input style = 'width: 10%' type = 'text' id = 'quantity'><br>"; 
+					var buy = "<button onclick = 'buyStock()' type='submit' value='Submit'>Buy</button>"
+					var endFirstDiv = "</div>"; 
+					
+					document.getElementById('content-loggedIn').innerHTML = firstDiv + ticker + name + star + exchange + 
+					label + quantity + buy + endFirstDiv + secondDiv + last + changeLine + date + endSecondDiv;
+					
+					var div = "<div style = 'clear:both'>"
+					var line = "<hr style = 'border-top: 3px solid; color: MediumBlue'>";
+					var market; 
+					if(data[2].askPrice == null || data[2].askPrice == 0){
+						market = "<p style = 'font-size: 16px; text-align:center'><mark style = 'background-color: #ff9999'>Market Closed</mark></p>";
+					}
+					else{
+						market = "<p style = 'font-size: 16px; text-align:center'><mark style = 'background-color: #80ff80'>Market Open</mark></p>";
+					} 
+					var summary = "<p style = 'font-size: 16px; color: grey; text-align:center'>Summary:</p>";
+					var endDiv = "</div>"
+					
+					var leftListDiv = "<div style = 'float:left; margin-left:10%'>"; 
+					var priceList = "<ul style = 'list-style-type:none; font-size: 16px; color: grey;'><li>High Price: "+data[0].high+"</li>"
+					+ "<li>Low Price: "+data[0].low+"</li><li>Open Price: "+data[0].open+"</li>" +
+					"<li>Close: " +data[0].close+"</li><li>Volume: " +data[0].volume+"</li></ul>";
+					var endLeftDiv = "</div>"; 
+					
+					var rightListDiv = "<div style = 'float:right; margin-right:10%'>"
+					var newFields = "<ul style = 'list-style-type:none; font-size: 16px; color: grey;'><li>Mid Price: "+data[2].mid+"</li>"
+					+ "<li>Ask Price: "+data[2].askPrice+"</li><li>Ask Size: "+data[2].askSize+"</li><li>Bid Price: "+data[2].bidPrice+"</li>"
+					+ "<li>Bid Size: "+data[2].bidSize+"</li></ul>"; 
+					var endRightDiv = "</div>"; 
+					
+					var clearDiv = "<div style = 'clear:both; margin-left:10%; margin-right:10%'>";
+					var descriptionHead = "<h1 style = 'text-align:center; font-size: 20px'>Company's Description:</h1>";
+					var startDate = "<p style = 'font-size: 16px; color: grey'>Start Date: "+data[1].startDate+"</p>"; 
+					var description = "<p style = 'font-size: 16px; color: grey'>"+data[1].description+"</p>";
+					var endClear = "</div>"; 
+					document.getElementById('description').innerHTML = div + market + summary + line + endDiv + leftListDiv + priceList 
+					+ endLeftDiv + rightListDiv + newFields + endRightDiv + clearDiv + descriptionHead + startDate + description + endClear; 
+					 
+				}
+				}
+			})
+			
+		}; 
+		function unClickStar(){
+			var element = getTicker; 
+			var star = "<span id = 'star'><i onclick = 'clickStar()' class='far fa-star'></i></span>";
+			document.getElementById('star').innerHTML = star;
+			fetch('RemoveFavorites?ticker=' + element)
+			.then(response => response.json())
+			.then(data => {
+				alert("Item removed from favorites"); 
+			})
+		};
+		function clickStar(){
+			var element = getTicker; 
+			var star = "<i onclick = 'unClickStar()'id = 'star' style = 'color:gold' class='fas fa-star'></i>";
+			document.getElementById('star').innerHTML = star;
+			fetch('FavoritesServlet?ticker=' + element)
+			.then(response => response.json())
+			.then(data => {
+				console.log(data.message); 
+				alert(data.message);
+			})
+			
+		};
+		function clickFavorites(){
+			document.getElementById('description').innerHTML = "";
+			var cookie = document.cookie.split(";");
+			username = cookie[0].split("=");
+			fetch('DisplayFavoritesServlet?username=' + username[1])
+			.then(response => response.json())
+			.then(data => {
+				console.log(data);
+				var top = "<h1 style = 'margin-left:20%; text-align:left; font-size:20px'>My Favorites</h1>";
+				var topline = "<hr style = 'border-top: 3px solid; color: MediumBlue; width:60%'>";
+				var favoritesLine = top + topline; 
+				if(data != null){
+					for(var i=0; i < data.length; i++){
+						var startDiv = "<div onclick = 'clickFavoritesCard(this.id)' id = '"+data[i].ticker+" Favorites' style = 'clear:both; border-style: solid; border-width:thin; overflow:hidden; width:60%; margin: auto'>";
+						var leftDiv = "<div style = 'float:left; text-align:left; margin-left:3%'>";
+						var ticker = "<p style = 'font-weight: bold'>"+data[i].ticker+"</p>"; 
+						var name = "<p style = 'color:grey; font-weight:bold; font-size:18px'>"+data[i].name+"</p>";
+						var endLeft = "</div>";
+						var rightDiv = "<div style = 'float:right; text-align:right; margin-right:3%'>"; 
+						var close = "<i id = '"+data[i].ticker+"' class= 'far fa-times-circle fa-sm' onclick = 'removeFavorite(this.id)'></i>";
+						var change = data[i].last - data[i].prevClose; 
+						var last; 
+						change = change.toFixed(2);
+						var changeLine
+						if(change >= 0){
+							changeLine = "<p style = 'color: limegreen; font-weight:bold'>"+change+"("+((change*100)/data[i].prevClose).toFixed(2)+")%</p>";
+							last = "<p style ='color:limegreen; font-weight:bold'>"+data[i].last+"</p>";
+						}
+						else{
+							changeLine = "<p style = 'color: red; font-weight:bold'>"+change+"("+((change*100)/data[i].prevClose).toFixed(2)+")%</p>";
+							last = "<p style ='color:red; font-weight:bold'>"+data[i].last+"</p>";
+						}
+						var endRight = "</div>";
+						var endDiv = "</div>"; 
+						var space = "<br>";
+						favoritesLine = favoritesLine.concat(startDiv, leftDiv, ticker, name, endLeft, rightDiv,
+								close, last, changeLine, endRight, endDiv, space); 
+					}
+					document.getElementById('content-loggedIn').innerHTML = favoritesLine; 
+				}
+				else{
+					var top = "<h1 style = 'margin-left:20%; text-align:left; font-size:20px'>My Favorites</h1>";
+					var topline = "<hr style = 'border-top: 3px solid; color: MediumBlue; width:60%'>";
+					document.getElementById('content-loggedIn').innerHTML = top + topline;
+					alert("Currently, you do not have any stocks in your favorites"); 
+				}
+			})
+		};
+		function clickFavoritesCard(x){
+			var y = x.split(" "); 
+			fetch('SearchServlet?ticker=' + y[0])
+			.then(response => response.json())
+			.then(data => {
+				console.log(data); 
+				info = data; 
+				var x = document.cookie.split(";"); 
+				if(x.length <= 1){
+					var ticker = '<h1>'+data[1].ticker+'</h1>'; 
+					var name = "<h1 style = 'color: grey'>"+data[1].name+"<h1>"; 
+					var exchange = "<p style = 'font-size: 16px; color: grey'>"+data[1].exchangeCode+"</p>";
+					var summary = "<p style = 'font-size: 16px; color: grey'>Summary:</p>";  
+					var line = "<hr style = 'border-top: 3px solid; color: MediumBlue'>"; 
+					var priceList = "<ul style = 'list-style-type:none; font-size: 16px; color: grey; margin-left: -30px'><li>High Price: "+data[0].high+"</li>"
+					+ "<li>Low Price: "+data[0].low+"</li><li>Open Price: "+data[0].open+"</li>" +
+					"<li>Close: " +data[0].close+"</li><li>Volume: " +data[0].volume+"</li></ul>";
+					var descriptionHead = "<h3>Company's Description:</h3>"; 
+					document.getElementById('content').innerHTML = ticker + name + exchange + summary + 
+					line + priceList + descriptionHead;
+					var startDate = "<p style = 'font-size: 16px; color: grey'>Start Date: "+data[1].startDate+"</p>"; 
+					var description = "<p style = 'font-size: 16px; color: grey'>"+data[1].description+"</p>"; 
+					document.getElementById('description').innerHTML = startDate + description; 
+				}
+				else{
+					var secondDiv = "<div style = 'float:right; text-align: right; margin-right: 10%'>";
+					var last;
+					var change = data[2].last - data[2].prevClose; 
+					change = change.toFixed(2);
+					var changeLine
+					if(change >= 0){
+						changeLine = "<h1 style = 'color: limegreen; margin-top: 0%'>"+change+"("+((change*100)/data[2].prevClose).toFixed(2)+")%</h1>";
+						last = "<h2 style ='color:limegreen; text-align:right'>"+data[2].last+"</h2>";
+					}
+					else{
+						changeLine = "<h1 style = 'color: red; margin-top: 0%'>"+change+"("+((change*100)/data[2].prevClose).toFixed(2)+")%</h1>";
+						last = "<h2 style ='color:red; text-align:right'>"+data[2].last+"</h2>";
+					}
+					var d = new Date();
+					var date = "<p style = 'color: grey'>"+d+"</p>";
+					var endSecondDiv = "</div"; 
+					
+					var firstDiv = "<div style = 'float:left; text-align:left; margin-left:10%'>";
+					var ticker = "<h2 name = 'ticker' style = 'text-align:left'>"+data[1].ticker+"</h2>"; 
+					getTicker = data[1].ticker; 
+					var name = "<h1 style = 'color: grey'>"+data[1].name+"<h1>"; 
+					var star = "<span id = 'star'><i onclick = 'clickStar()' class='far fa-star'></i></span>";
+					var exchange = "<p style = 'font-size: 16px; color: grey;'>"+data[1].exchangeCode+"</p>";
+					var label = "<label for='quantity' style = 'font-size: 16px'>Quantity: </label>"
+					var quantity = "<input style = 'width: 10%' type = 'text' id = 'quantity'><br>"; 
+					var buy = "<button onclick = 'buyStock()' type='submit' value='Submit'>Buy</button>"
+					var endFirstDiv = "</div>"; 
+					
+					document.getElementById('content-loggedIn').innerHTML = firstDiv + ticker + name + star + exchange + 
+					label + quantity + buy + endFirstDiv + secondDiv + last + changeLine + date + endSecondDiv;
+					
+					var div = "<div style = 'clear:both'>"
+					var line = "<hr style = 'border-top: 3px solid; color: MediumBlue'>";
+					var market; 
+					if(data[2].askPrice == null || data[2].askPrice == 0){
+						market = "<p style = 'font-size: 16px; text-align:center'><mark style = 'background-color: #ff9999'>Market Closed</mark></p>";
+					}
+					else{
+						market = "<p style = 'font-size: 16px; text-align:center'><mark style = 'background-color: #80ff80'>Market Open</mark></p>";
+					} 
+					var summary = "<p style = 'font-size: 16px; color: grey; text-align:center'>Summary:</p>";
+					var endDiv = "</div>"
+					
+					var leftListDiv = "<div style = 'float:left; margin-left:10%'>"; 
+					var priceList = "<ul style = 'list-style-type:none; font-size: 16px; color: grey;'><li>High Price: "+data[0].high+"</li>"
+					+ "<li>Low Price: "+data[0].low+"</li><li>Open Price: "+data[0].open+"</li>" +
+					"<li>Close: " +data[0].close+"</li><li>Volume: " +data[0].volume+"</li></ul>";
+					var endLeftDiv = "</div>"; 
+					
+					var rightListDiv = "<div style = 'float:right; margin-right:10%'>"
+					var newFields = "<ul style = 'list-style-type:none; font-size: 16px; color: grey;'><li>Mid Price: "+data[2].mid+"</li>"
+					+ "<li>Ask Price: "+data[2].askPrice+"</li><li>Ask Size: "+data[2].askSize+"</li><li>Bid Price: "+data[2].bidPrice+"</li>"
+					+ "<li>Bid Size: "+data[2].bidSize+"</li></ul>"; 
+					var endRightDiv = "</div>"; 
+					
+					var clearDiv = "<div style = 'clear:both; margin-left:10%; margin-right:10%'>";
+					var descriptionHead = "<h1 style = 'text-align:center; font-size: 20px'>Company's Description:</h1>";
+					var startDate = "<p style = 'font-size: 16px; color: grey'>Start Date: "+data[1].startDate+"</p>"; 
+					var description = "<p style = 'font-size: 16px; color: grey'>"+data[1].description+"</p>";
+					var endClear = "</div>"; 
+					document.getElementById('description').innerHTML = div + market + summary + line + endDiv + leftListDiv + priceList 
+					+ endLeftDiv + rightListDiv + newFields + endRightDiv + clearDiv + descriptionHead + startDate + description + endClear; 
+					 
+				}
+				
+			})
+		};
+		function removeFavorite(x){
+			console.log(x);
+			event.cancelBubble = true;
+			if(event.stopPropagation) event.stopPropagation();
+			document.getElementById(x+" Favorites").style.display = "none"; 
+			fetch('RemoveFavorites?ticker=' + x)
+			.then(response => response.json())
+			.then(data => {
+				clickFavorites(); 
+			})
+			
+		};
+		function buyStock(){
+			var buyPrice; 
+			if(info[2].askPrice == null || info[2].askPrice == 0){
+				buyPrice = info[2].last;
+			}
+			else{
+				buyPrice = info[2].askPrice; 
+			}
+			var ticker = info[1].ticker; 
+			var quantity = document.getElementById('quantity').value;
+			console.log(quantity); 
+			fetch('BuyServlet?ticker=' + ticker + '&buyPrice=' + buyPrice + '&quantity=' + quantity)
+			.then(response => response.text())
+			.then(data => {
+				alert(data); 
+			})
+		};
+		function clickPortfolio(){
+			document.getElementById('description').innerHTML = "";
+			var cookie = document.cookie.split(";");
+			username = cookie[0].split("=");
+			fetch('DisplayPortfolioServlet?username=' + username[1])
+			.then(response => response.json())
+			.then(data => {
+				console.log(data);
+				var headerDiv = "<div style = 'margin-left:20%; text-align: left'>"; 
+				var header = "<h1>My Portfolio</h1>"; 
+				var cashBalance = "<p style = 'font-weight: bold'>Cash Balance: $"+data[data.length-1].balance.toFixed(2)+"</p>"; 
+				var accountValue = "<p style = 'font-weight: bold'>Total Account Value: $"+data[data.length-1].accountVal.toFixed(2)+"</p>"; 
+				var endHeader = "</div>"; 
+				var portfolioLine = headerDiv + header + cashBalance + accountValue + endHeader; 
+				for(var i=0; i < data.length - 1; i++){
+					var startDiv = "<div style = 'clear:both; border-style: solid; border-width:thin; overflow:hidden; width:60%; margin: auto'>";
+					var nameDiv = "<div style = 'border-bottom: solid; border-width:thin; text-align:left; background-color:gainsboro; margin-top:-19px'>"; 
+					var ticker = "<p style = 'font-weight:bold; font-size: 20px'>"+data[i].ticker+"</p>"; 
+					var name = "<p style = 'color: dimgray'>"+data[i].name+"</p>"; 
+					var endName = "</div";
+					var statsDiv = "<div style = 'text-align:center;'>"; 
+					var leftDiv = "<div style = 'float:left'>";
+					var quantity = "<p>Quantity: "+data[i].quantity+"</p>"; 
+					var average = "<p>Avg. Cost / Share: $"+data[i].averageCost+"</p>"; 
+					var total = "<p>Total Cost: $"+data[i].totalCost.toFixed(2)+"</p>"; 
+					var endLeft = "</div>"
+					var rightDiv = "<div style = 'float:right'>";
+					var change = data[i].change; 
+					change = change.toFixed(2); 
+					if(change >= 0){
+						var changeLine = "<p>Change: <span style = 'color:limegreen'>"+change+"</span></p>";
+					}
+					else{
+						var changeLine = "<p>Change: <span style = 'color:red'>"+change+"</span></p>";
+					}
+					var currentPrice = "<p>Current Price: $"+data[i].currentPrice+"</p>"; 
+					var marketVal = "<p>Market Value: $"+data[i].marketValue.toFixed(2)+"</p>";  
+					var endRight = "</div>"; 
+					var endStats = "</div>"
+					var buyDiv = "<div style = 'clear:both; border-top: solid; border-width:thin; background-color:gainsboro'>"; 
+					var quantityLabel = "<label for='quantity' style = 'font-size: 16px'>Quantity: </label>"
+					var quantityInput = "<input style = 'width: 10%' type = 'text' id = '"+data[i].ticker+"Quantity'><br><br>";
+					var buyInput = "<input type = 'radio' id = 'buy' name = 'trade' value = 'buy'>"; 
+					var buyLabel = "<label for = 'buy' >Buy</label>"
+					var sellInput = "<input type = 'radio' id = 'sell' name = 'trade' value = 'sell'>"; 
+					var sellLabel = "<label for = 'sell' >Sell</label><br><br>"
+					var submit = "<button id = '"+data[i].ticker+"' onclick = 'clickTrade(this.id, "+data[i].currentPrice+")' type='submit' value='Submit'>Submit</button>"
+					var endBuy = "</div>"; 
+					var endDiv = "</div>"; 
+					var space = "<br>"; 
+					portfolioLine = portfolioLine.concat(startDiv, nameDiv, ticker, name, endName, statsDiv, leftDiv,
+							quantity, average, total, endLeft, rightDiv, changeLine, currentPrice, marketVal, endRight, endStats, 
+							buyDiv, quantityLabel, quantityInput, buyInput, buyLabel, sellInput, sellLabel, submit, endBuy, 
+							endDiv, space); 
+				}
+				document.getElementById('content-loggedIn').innerHTML = portfolioLine;
+			})
+		};
+		function clickTrade(x, y){
+			var ticker = x; 
+			var price = y;   
+			var quantity = document.getElementById(ticker + "Quantity").value;
+			console.log(quantity); 
+			var option = document.querySelector('input[name = "trade"]:checked').value; 
+			if(option == "buy"){
+				if(quantity <= 0){
+					alert("Please enter a quantity greater than or equal to zero"); 
+				}
+				else{
+					fetch('BuyServlet?ticker=' + ticker + '&buyPrice=' + price + '&quantity=' + quantity)
+					.then(response => response.text())
+					.then(data => {
+						alert(data); 
+						clickPortfolio();
+					})
+				}
+			}
+			else{
+				if(quantity <= 0){
+					alert("Please enter a quantity greater than or equal to zero"); 
+				}
+				else{
+					fetch('SellServlet?ticker=' + ticker + '&sellPrice=' + price + '&quantity=' + quantity)
+					.then(response => response.text())
+					.then(data => {
+						alert(data); 
+						clickPortfolio();
+					})
+				}
+			}
+			
+		};
+		function onLoad() {
+		      gapi.load('auth2', function() {
+		        gapi.auth2.init();
+		      });
+		};
+		function clickLogout(){
+			if(gapi.auth2.getAuthInstance().isSignedIn.get()){
+				var auth2 = gapi.auth2.getAuthInstance();
+			    auth2.signOut().then(function () {
+			      console.log('User signed out.');
+			    });
+			    loggedIn(); 
+			}	
+			var cookies = document.cookie.split(";");
+			    for (var i = 0; i < cookies.length; i++) {
+			        var cookie = cookies[i];
+			        var eqPos = cookie.indexOf("=");
+			        var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+			        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+			    }
+				loggedIn();
+		};
+	</script>
+</head>
+<body onload = "loggedIn()">
+	<div class = "topnav">
+		<a class = "home" href = "homePage.html">SalStocks</a>
+		<div id = "navbar"></div>
+	</div>
+	<div id = "content" style = "text-align: center">
+	<div id = "content-loggedIn">
+		<h2 class = middle>STOCK SEARCH</h2>
+		<input type = "text" id = "searchSpace" name = "ticker">
+		<button type="submit" value="Submit" onclick = "companyData()">Search</button>
+	</div>
+	</div>
+	<div id = "description"></div>
+</body>
+</html>
